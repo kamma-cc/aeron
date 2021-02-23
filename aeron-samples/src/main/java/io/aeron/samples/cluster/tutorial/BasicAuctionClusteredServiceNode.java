@@ -136,8 +136,8 @@ public class BasicAuctionClusteredServiceNode
         final MediaDriver.Context mediaDriverContext = new MediaDriver.Context()
             .aeronDirectoryName(aeronDirName)
             .threadingMode(ThreadingMode.SHARED)
-                .conductorIdleStrategy(new BusySpinIdleStrategy())
-            .termBufferSparseFile(true)
+                .sharedIdleStrategy(new BusySpinIdleStrategy())
+                .termBufferSparseFile(true)
             .multicastFlowControlSupplier(new MinMulticastFlowControlSupplier())
             .terminationHook(barrier::signal)
             .errorHandler(BasicAuctionClusteredServiceNode.errorHandler("Media Driver"));

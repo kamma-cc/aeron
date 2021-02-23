@@ -209,7 +209,7 @@ public class BasicAuctionClusterClient implements EgressListener
         try (
             MediaDriver mediaDriver = MediaDriver.launchEmbedded(new MediaDriver.Context()                      // <1>
                 .threadingMode(ThreadingMode.SHARED)
-                    .conductorIdleStrategy(new BusySpinIdleStrategy())
+                    .sharedIdleStrategy(new BusySpinIdleStrategy())
                 .dirDeleteOnStart(true)
                 .dirDeleteOnShutdown(true));
             AeronCluster aeronCluster = AeronCluster.connect(
