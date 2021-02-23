@@ -213,7 +213,7 @@ public class BasicAuctionClusterClient implements EgressListener
             AeronCluster aeronCluster = AeronCluster.connect(
                 new AeronCluster.Context()
                 .egressListener(client)                                                                         // <2>
-                .egressChannel("aeron:udp?endpoint=localhost:0")                                                // <3>
+                .egressChannel("aeron:udp?endpoint=172.31.1.201:0")                                                // <3>
                 .aeronDirectoryName(mediaDriver.aeronDirectoryName())
                 .ingressChannel("aeron:udp")                                                                    // <4>
                 .ingressEndpoints(ingressEndpoints)))                                                           // <5>
