@@ -27,7 +27,6 @@ import org.agrona.MutableDirectBuffer;
 import org.agrona.concurrent.BackoffIdleStrategy;
 import org.agrona.concurrent.BusySpinIdleStrategy;
 import org.agrona.concurrent.IdleStrategy;
-import org.agrona.concurrent.YieldingIdleStrategy;
 
 import java.util.Arrays;
 import java.util.List;
@@ -47,7 +46,7 @@ public class BasicAuctionClusterClient implements EgressListener
     private final IdleStrategy idleStrategy = new BackoffIdleStrategy();
     private final long customerId;
     private final int numOfBids;
-    private final int bidIntervalMs;
+    private final int bidIntervalUs;
 
     private long correlationId = ThreadLocalRandom.current().nextLong();
     private long lastBidSeen = 100;
@@ -57,13 +56,13 @@ public class BasicAuctionClusterClient implements EgressListener
      *
      * @param customerId    for the client.
      * @param numOfBids     to make as a client.
-     * @param bidIntervalMs between the bids.
+     * @param bidIntervalUs between the bids.
      */
-    public BasicAuctionClusterClient(final long customerId, final int numOfBids, final int bidIntervalMs)
+    public BasicAuctionClusterClient(final long customerId, final int numOfBids, final int bidIntervalUs)
     {
         this.customerId = customerId;
         this.numOfBids = numOfBids;
-        this.bidIntervalMs = bidIntervalMs;
+        this.bidIntervalUs = bidIntervalUs;
     }
 
     /**
@@ -117,28 +116,28 @@ public class BasicAuctionClusterClient implements EgressListener
     // end::response[]
 
     private void bidInAuction(final AeronCluster aeronCluster) {
-        long keepAliveDeadlineMs = 0;
-        long nextBidDeadlineMs = System.currentTimeMillis() + ThreadLocalRandom.current().nextInt(1000);
+        long keepAliveDeadlineNs = 0;
+        long nextBidDeadlineNs = System.nanoTime() + ThreadLocalRandom.current().nextInt(1000000000);
         int bidsLeftToSend = numOfBids;
 
         while (!Thread.currentThread().isInterrupted()) {
-            final long currentTimeMs = System.currentTimeMillis();
+            final long currentTimeNs = System.nanoTime();
 
-            if (nextBidDeadlineMs <= currentTimeMs && bidsLeftToSend > 0) {
+            if (nextBidDeadlineNs <= currentTimeNs && bidsLeftToSend > 0) {
                 final long price = lastBidSeen + ThreadLocalRandom.current().nextInt(10);
                 final long correlationId = sendBid(aeronCluster, price);
-                nextBidDeadlineMs = currentTimeMs + ThreadLocalRandom.current().nextInt(bidIntervalMs);
-                keepAliveDeadlineMs = currentTimeMs + 1_000;       // <1>
+                nextBidDeadlineNs = currentTimeNs + ThreadLocalRandom.current().nextInt(bidIntervalUs) * 1000;
+                keepAliveDeadlineNs = currentTimeNs + 1_000_000_000;       // <1>
                 --bidsLeftToSend;
 
                 printOutput(
                         "Sent(" + (correlationId) + ", " + customerId + ", " + price + ") bidsRemaining=" +
                                 bidsLeftToSend);
-            } else if (keepAliveDeadlineMs <= currentTimeMs)         // <2>
+            } else if (keepAliveDeadlineNs <= currentTimeNs)         // <2>
             {
                 if (bidsLeftToSend > 0) {
                     aeronCluster.sendKeepAlive();
-                    keepAliveDeadlineMs = currentTimeMs + 1_000;   // <3>
+                    keepAliveDeadlineNs = currentTimeNs + 1_000_000_000;   // <3>
                 } else {
                     break;
                 }
@@ -197,13 +196,13 @@ public class BasicAuctionClusterClient implements EgressListener
     public static void main(final String[] args) {
         final int customerId = Integer.parseInt(System.getProperty("aeron.cluster.tutorial.customerId"));       // <1>
         final int numOfBids = Integer.parseInt(System.getProperty("aeron.cluster.tutorial.numOfBids"));         // <2>
-        final int bidIntervalMs = Integer.parseInt(System.getProperty("aeron.cluster.tutorial.bidIntervalMs")); // <3>
+        final int bidIntervalUs = Integer.parseInt(System.getProperty("aeron.cluster.tutorial.bidIntervalMs")); // <3>
 
         final String[] hostnames = System.getProperty(
                 "aeron.cluster.tutorial.hostnames", "172.31.1.201,172.31.5.180,172.31.2.163").split(",");
         final String ingressEndpoints = ingressEndpoints(Arrays.asList(hostnames));
 
-        final BasicAuctionClusterClient client = new BasicAuctionClusterClient(customerId, numOfBids, bidIntervalMs);
+        final BasicAuctionClusterClient client = new BasicAuctionClusterClient(customerId, numOfBids, bidIntervalUs);
 
         // tag::connect[]
         try (
