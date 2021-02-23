@@ -135,10 +135,8 @@ public class BasicAuctionClusteredServiceNode
         // tag::media_driver[]
         final MediaDriver.Context mediaDriverContext = new MediaDriver.Context()
             .aeronDirectoryName(aeronDirName)
-            .threadingMode(ThreadingMode.DEDICATED)
+            .threadingMode(ThreadingMode.SHARED)
                 .conductorIdleStrategy(new BusySpinIdleStrategy())
-                .senderIdleStrategy(new NoOpIdleStrategy())
-                .receiverIdleStrategy(new NoOpIdleStrategy())
             .termBufferSparseFile(true)
             .multicastFlowControlSupplier(new MinMulticastFlowControlSupplier())
             .terminationHook(barrier::signal)
@@ -152,6 +150,7 @@ public class BasicAuctionClusteredServiceNode
             .controlChannel(udpChannel(nodeId, hostname, ARCHIVE_CONTROL_REQUEST_PORT_OFFSET))
             .localControlChannel("aeron:ipc?term-length=64k")
             .recordingEventsEnabled(false)
+                .idleStrategySupplier(BusySpinIdleStrategy::new)
             .threadingMode(ArchiveThreadingMode.SHARED);
         // end::archive[]
 
@@ -161,6 +160,7 @@ public class BasicAuctionClusteredServiceNode
             .controlRequestChannel(archiveContext.localControlChannel())
             .controlRequestStreamId(archiveContext.localControlStreamId())
             .controlResponseChannel(archiveContext.localControlChannel())
+                .idleStrategy(new BusySpinIdleStrategy())
             .aeronDirectoryName(aeronDirName);
         // end::archive_client[]
 
