@@ -25,6 +25,7 @@ import org.agrona.DirectBuffer;
 import org.agrona.ExpandableDirectByteBuffer;
 import org.agrona.MutableDirectBuffer;
 import org.agrona.concurrent.BackoffIdleStrategy;
+import org.agrona.concurrent.BusySpinIdleStrategy;
 import org.agrona.concurrent.IdleStrategy;
 import org.agrona.concurrent.YieldingIdleStrategy;
 
@@ -212,11 +213,12 @@ public class BasicAuctionClusterClient implements EgressListener
                 .dirDeleteOnShutdown(true));
             AeronCluster aeronCluster = AeronCluster.connect(
                 new AeronCluster.Context()
-                .egressListener(client)                                                                         // <2>
+                .egressListener(client)// <2>
                 .egressChannel("aeron:udp?endpoint=172.31.1.201:0")                                                // <3>
                 .aeronDirectoryName(mediaDriver.aeronDirectoryName())
                 .ingressChannel("aeron:udp")                                                                    // <4>
-                .ingressEndpoints(ingressEndpoints)))                                                           // <5>
+                .ingressEndpoints(ingressEndpoints)
+            .idleStrategy(new BusySpinIdleStrategy())))                                                           // <5>
         {
         // end::connect[]
             client.bidInAuction(aeronCluster);

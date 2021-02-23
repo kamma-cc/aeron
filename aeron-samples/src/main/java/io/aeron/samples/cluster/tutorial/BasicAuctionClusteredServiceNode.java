@@ -181,7 +181,8 @@ public class BasicAuctionClusteredServiceNode
             .aeronDirectoryName(aeronDirName)                                                            // <1>
             .archiveContext(aeronArchiveContext.clone())                                                 // <2>
             .clusterDir(new File(baseDir, "service"))
-            .clusteredService(new BasicAuctionClusteredService())                                        // <3>
+            .clusteredService(new BasicAuctionClusteredService())
+                    .idleStrategySupplier(BusySpinIdleStrategy::new)// <3>
             .errorHandler(errorHandler("Clustered Service"));
         // end::clustered_service[]
 
