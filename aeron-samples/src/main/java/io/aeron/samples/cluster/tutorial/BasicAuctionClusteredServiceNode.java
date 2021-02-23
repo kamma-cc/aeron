@@ -121,7 +121,7 @@ public class BasicAuctionClusteredServiceNode
     {
         final int nodeId = parseInt(System.getProperty("aeron.cluster.tutorial.nodeId"));               // <1>
         final String[] hostnames = System.getProperty(
-            "aeron.cluster.tutorial.hostnames", "localhost,localhost,localhost").split(",");            // <2>
+            "aeron.cluster.tutorial.hostnames", "172.31.1.201,172.31.5.180,172.31.2.163").split(",");            // <2>
         final String hostname = hostnames[nodeId];
 
         final File baseDir = new File(System.getProperty("user.dir"), "node" + nodeId);                 // <3>
