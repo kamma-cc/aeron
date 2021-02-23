@@ -27,6 +27,8 @@ import io.aeron.driver.MediaDriver;
 import io.aeron.driver.MinMulticastFlowControlSupplier;
 import io.aeron.driver.ThreadingMode;
 import org.agrona.ErrorHandler;
+import org.agrona.concurrent.BusySpinIdleStrategy;
+import org.agrona.concurrent.NoOpIdleStrategy;
 import org.agrona.concurrent.NoOpLock;
 import org.agrona.concurrent.ShutdownSignalBarrier;
 
@@ -133,7 +135,10 @@ public class BasicAuctionClusteredServiceNode
         // tag::media_driver[]
         final MediaDriver.Context mediaDriverContext = new MediaDriver.Context()
             .aeronDirectoryName(aeronDirName)
-            .threadingMode(ThreadingMode.SHARED)
+            .threadingMode(ThreadingMode.DEDICATED)
+                .conductorIdleStrategy(new BusySpinIdleStrategy())
+                .senderIdleStrategy(new NoOpIdleStrategy())
+                .receiverIdleStrategy(new NoOpIdleStrategy())
             .termBufferSparseFile(true)
             .multicastFlowControlSupplier(new MinMulticastFlowControlSupplier())
             .terminationHook(barrier::signal)
