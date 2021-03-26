@@ -467,6 +467,8 @@ final class ConsensusModuleAgent implements Agent
             final ClusterMember follower = clusterMemberByIdMap.get(followerMemberId);
             if (null != follower && logLeadershipTermId <= leadershipTermId)
             {
+                logPublisher.removeDestination(ctx.isLogMdc(), follower.logEndpoint());
+                logPublisher.addDestination(ctx.isLogMdc(), follower.logEndpoint());
                 final RecordingLog.Entry termEntry = recordingLog.findTermEntry(
                     logLeadershipTermId < leadershipTermId ? logLeadershipTermId + 1 : logLeadershipTermId);
                 if (null != termEntry)
